@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
-import { env } from '../configs/envSchema';
-import User from "../models/user.model"
+import { env } from '../configs/envSchema.js';
+import User from "../models/user.model.js"
 
 export const authenticate = async(req,res,next)=>{
     const authHeader= req?.headers?.authorization
@@ -10,11 +10,12 @@ export const authenticate = async(req,res,next)=>{
             success: false,
             error: "Unauthorized, token missing or invalid"
         })
+    }
 
-        const token = authHeader.split(" ")[1];
+    const token = authHeader.split(" ")[1];
 
         try {
-            const decode = jwt.verify(env.JWT_SECRET);
+            const decode = jwt.verify(token,env.JWT_SECRET);
             req.user=await User.findById(decode.userId).select("role");
             next();
         } catch (error) {
@@ -23,5 +24,4 @@ export const authenticate = async(req,res,next)=>{
                     error: "Unauthorized, token missing or invalid"
                 })
         }
-    }
 }
