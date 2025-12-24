@@ -1,12 +1,18 @@
 import express from "express";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-dotenv.config();
+import connectDB from "./configs/connectDB.js"
+import attendenceRoute from './routes/attendence.route.js'
+import classRoute from './routes/class.route.js'
+import userRoute from './routes/user.route.js'
+import { env } from "./configs/envSchema.js";
+
+
+connectDB()
 const app = express();
 
-app.get("/", (res, req) => {
+app.get("/", (req, res) => {
   res.send("Server is running fine .....");
 });
 
@@ -15,8 +21,12 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-const PORT = process.env.PORT || 3000;
+app.use('/api/v1/class',classRoute);
+app.use('/api/v1/attendence',attendenceRoute);
+app.use('/api/v1/user',userRoute);
+
+const PORT = env.PORT || 3000;
 
 app.listen(PORT, () =>
-  console.log(`Server is up and running one port ${PORT}`)
+  console.log(`Server is up and running on port ${PORT}`)
 );
