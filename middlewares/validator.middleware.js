@@ -3,7 +3,7 @@ export const validateBody = (schema) => async(req, res, next) => {
   if (!d.success) {
     return res.status(400).json({
       success: false,
-      error: "Invalid request schema",
+      error: "Invalid request body schema",
     });
   }
   req.body = d.data;
@@ -11,11 +11,11 @@ export const validateBody = (schema) => async(req, res, next) => {
 };
 
 export const validateParams = (schema) => async(req, res, next) => {
-  const d = schema.safeParse(req.body);
+  const d = schema.safeParse(req.params);
   if (!d.success) {
     return res.status(400).json({
       success: false,
-      error: "Invalid request schema",
+      error: "Invalid request params schema",
     });
   }
   req.params = d.data;
@@ -23,11 +23,11 @@ export const validateParams = (schema) => async(req, res, next) => {
 };
 
 export const validateQuery = (schema) => async(req, res, next) => {
-  const d = schema.safeParse(req.body);
+  const d = schema.safeParse(req.query);
   if (!d.success) {
     return res.status(400).json({
       success: false,
-      error: "Invalid request schema",
+      error: "Invalid request query schema",
     });
   }
   req.query = d.data;

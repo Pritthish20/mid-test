@@ -8,13 +8,13 @@ const classSchema = new mongoose.Schema(
       unique: true,
     },
     teacherId: {
-      Type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
     studentIds: [
       {
-        Type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
     ],
