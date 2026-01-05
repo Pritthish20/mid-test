@@ -50,11 +50,11 @@ router.get(
   getClass
 );
 router.get(
-  "/:id/my-attendence",
+  "/:id/my-attendance",
   authenticate,
   roleStudent,
-  classAccess,
   validateParams(getMyAttendenceParamsSchema),
+   classAccess,
   getMyAttendence
 );
 

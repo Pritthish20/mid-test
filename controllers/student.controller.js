@@ -5,7 +5,7 @@ export const getStudents=async(req,res)=>{
         const studentDocs = await User.find({role:"student"}).select("name email")
 
         return res.status(200).json({
-            sucess:true,
+            success:true,
             data:studentDocs
         })
         

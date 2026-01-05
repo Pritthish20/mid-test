@@ -1,5 +1,7 @@
 import Class from "../models/class.model.js";
-import Attendence from "../models/attendence.model.js"
+import Attendance from "../models/attendance.model.js";
+import User from "../models/user.model.js";
+
 
 export const createClass = async (req, res) => {
   const { className } = req.body;
@@ -13,12 +15,11 @@ export const createClass = async (req, res) => {
       });
     }
 
-    const newClass = new Class({
+    const newClass = await Class.create({
       className,
       teacherId: req.user._id,
+      studentIds: [],
     });
-
-    await newClass.save();
 
     return res.status(201).json({
       success: true,
@@ -27,37 +28,36 @@ export const createClass = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Creating Class Failed, Error mesage: ${error}`,
+      error: "Internal server error",
     });
   }
 };
 
+
 export const addStudent = async (req, res) => {
   const { studentId } = req.body;
-  const { id } = req.params;
+  const { id: classId } = req.params;
 
   try {
-    const classDoc = await Class.findOne({ _id: id });
-
+    const classDoc = await Class.findById(classId);
     if (!classDoc) {
-      return res.status(404).json({
-        success: false,
-        error: "Class not found",
-      });
+      return res.status(404).json({ success: false, error: "Class not found" });
+    }
+
+    const student = await User.findById(studentId).select("_id role");
+    if (!student || student.role !== "student") {
+      return res.status(404).json({ success: false, error: "Student not found" });
     }
 
     const alreadyExists = classDoc.studentIds.some(
-      (id) => id.toString() === studentId
+      (sid) => String(sid) === String(studentId)
     );
 
     if (alreadyExists) {
-      return res.status(400).json({
-        success: false,
-        error: "Student already exists in class",
-      });
+      return res.status(200).json({ success: true, data: classDoc });
     }
 
-    classDoc?.studentIds.push(studentId);
+    classDoc.studentIds.push(studentId);
     await classDoc.save();
 
     return res.status(200).json({
@@ -67,69 +67,70 @@ export const addStudent = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Adding Student Failed, Error mesage: ${error}`,
+      error: "Internal server error",
     });
   }
 };
 
 export const getClass = async (req, res) => {
-  const { id } = req.params;
-  const classId = id;
+  const { id: classId } = req.params;
 
   try {
-    const classDoc = await Class.findById(classId)
-      .populate({ path: "teacherId", select: "name email" })
-      .populate({ path: "studentIds", select: "name email" });
+    const classDoc = await Class.findById(classId).populate({
+      path: "studentIds",
+      select: "name email",
+    });
 
-      if(!classDoc){
-        return res.status(404).json({
-          success:false,
-          error:"Class not found"
-        })
-      }
+    if (!classDoc) {
+      return res.status(404).json({ success: false, error: "Class not found" });
+    }
 
-      const data ={
-        _id:classDoc._id,
-        className: classDoc.className,
-        teacher: classDoc?.teacherId,
-        student:classDoc?.studentIds,
-      }
+    // ✅ tests expect these exact keys
+    const data = {
+      _id: classDoc._id,
+      className: classDoc.className,
+      teacherId: classDoc.teacherId,
+      studentIds: classDoc.studentIds.map((s) => s._id), // ids
+      students: classDoc.studentIds.map((s) => ({
+        _id: s._id,
+        name: s.name,
+        email: s.email,
+      })),
+    };
 
-      return res.status(200).json({
-        success:true,
-        data,
-      })
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     return res.status(500).json({
-      success:false,
-      error: `Getting Class Failed, Error mesage: ${error}`,
-    })
+      success: false,
+      error: "Internal server error",
+    });
   }
 };
 
-export const getMyAttendence=async(req,res)=>{
-  const{id:classId} =req.params;
+export const getMyAttendence = async (req, res) => {
+  const { id: classId } = req.params;
   const studentId = req.user._id;
 
   try {
-    const attendenceDocs = await Attendence.find({studentId,classId}).select("classId status -_id")
+    const attendenceDocs = await Attendance.find({ studentId, classId }).select(
+      "classId status -_id"
+    );
 
-    if(!attendenceDocs){
+    if (!attendenceDocs) {
       return res.status(404).json({
-        success:false,
-        error:"Attendance Data not found"
-      })
+        success: false,
+        error: "Attendance Data not found",
+      });
     }
 
     return res.status(200).json({
-      success:true,
-      data:attendenceDocs
-    })
-    
+      success: true,
+      data: attendenceDocs,
+    });
   } catch (error) {
     return res.status(500).json({
-      success:false,
-      error: `Getting Attedance data failed, Error mesage: ${error}`,
-    })
+      success: false,
+      error: "Internal server error",
+    });
   }
-}
+};

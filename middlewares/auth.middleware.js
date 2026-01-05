@@ -1,27 +1,45 @@
-import jwt from 'jsonwebtoken'
-import { env } from '../configs/envSchema.js';
-import User from "../models/user.model.js"
+import jwt from "jsonwebtoken";
+import { env } from "../configs/envSchema.js";
+import User from "../models/user.model.js";
 
-export const authenticate = async(req,res,next)=>{
-    const authHeader= req?.headers?.authorization
+export const authenticate = async (req, res, next) => {
+  const token = req?.headers?.authorization;
 
-    if(!authHeader?.startsWith('Bearer ')){
-        res.status(401).json({
-            success: false,
-            error: "Unauthorized, token missing or invalid"
-        })
+  if (!token || typeof token !== "string" || token.trim().length === 0) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized, token missing or invalid",
+    });
+  }
+
+  // const token = token.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token.trim(), env.JWT_SECRET);
+
+    const userId = decoded?.userId || decoded?._id || decoded?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized, token missing or invalid",
+      });
     }
 
-    const token = authHeader.split(" ")[1];
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized, token missing or invalid",
+      });
+    }
 
-        try {
-            const decode = jwt.verify(token,env.JWT_SECRET);
-            req.user=await User.findById(decode.userId).select("role");
-            next();
-        } catch (error) {
-            return res.status(401).json({
-                    success: false,
-                    error: "Unauthorized, token missing or invalid"
-                })
-        }
-}
+    req.user = user;
+    return next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized, token missing or invalid",
+    });
+  }
+};

@@ -4,9 +4,9 @@ import User from "../models/user.model.js";
 import { generateToken } from "../utils/createToken.js";
 
 export const signup = async (req, res) => {
-  const { name, email, password, role } = req.body;
-
   try {
+    const { name, email, password, role } = req.body;
+
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -35,21 +35,21 @@ export const signup = async (req, res) => {
     };
 
     return res.status(201).json({
-      sucess: true,
+      success: true,
       data,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: `Signup Failed, Error mesage: ${error}`,
+      error: "Internal server error",
     });
   }
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-
   try {
+    const { email, password } = req.body;
+
     const existingUser = await User.findOne({ email });
     if (!existingUser)
       return res.status(400).json({
@@ -76,30 +76,33 @@ export const login = async (req, res) => {
       data,
     });
   } catch (error) {
-    return res.status(400).json({
-      success: false,
-      error: `Login Failed, Error mesage: ${error}`,
-    });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal server error" });
   }
 };
 
 export const getProfile = async (req, res) => {
   try {
-    const profile = await User.findOne({_id: req.user._id});
+    const profile = await User.findById(req.user._id).select("-password");
+
     if (!profile) {
-      return res.status(404).json({
+      return res.status(401).json({
         success: false,
-        error: `User Profile not Found`,
+        error: "Unauthorized, token missing or invalid",
       });
     }
+
     return res.status(200).json({
       success: true,
-      data: profile,
+      data: {
+        _id: profile._id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role,
+      },
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error: `Geting User Profile Failed, Error mesage: ${error}`,
-    });
+  } catch {
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };

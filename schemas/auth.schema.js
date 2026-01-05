@@ -7,7 +7,7 @@ const EmailSchema = z
   .pipe(z.email({ error: "Invalid Email Address" }));
 
 export const signupSchema = z.object({
-  name: z.string().trim().min(3),
+  name: z.string().trim().min(1),
   email: EmailSchema,
   password: z
     .string()

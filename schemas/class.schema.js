@@ -1,17 +1,17 @@
 import z from "zod";
 
 export const createClassSchema = z.object({
-    className:z.string().trim().min(3)
+    className: z.string().trim().min(1),
 })
 
 export const addStudentParamsSchema = z.object({
-    id:z.string().trim().min(3)
+    id:z.string().trim().min(1)
 })
 
 export const addStudentBodySchema = z.object({
-    studentId: z.string().trim().min(3)
+    studentId: z.string().trim().min(1)
 })
 
 export const getMyAttendenceParamsSchema = z.object({
-    id: z.string().trim().min(3)
+    id: z.string().trim().min(1)
 })
